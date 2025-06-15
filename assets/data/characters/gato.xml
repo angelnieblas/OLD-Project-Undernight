@@ -1,0 +1,9 @@
+<!DOCTYPE codename-engine-character>
+<!-- Made with WizardMantis's Character Converter on https://codename-engine.com/ -->
+<character sprite="gato" icon="gato" color="#af66ce" x="-180" y="180" camx="80" camy="20" holdTime="6.1" scale="0.9">
+	<anim name="idle" anim="idle" x="-2.2222222222222223" y="-25.555555555555554" fps="60"/>
+	<anim name="singLEFT" anim="left" x="83.33333333333333" y="-40" fps="60"/>
+	<anim name="singDOWN" anim="down" x="-3.333333333333333" y="-96.66666666666666" fps="60"/>
+	<anim name="singUP" anim="up" x="-12.222222222222221" y="14.444444444444445" fps="60"/>
+	<anim name="singRIGHT" anim="right" x="-81.11111111111111" y="-55.55555555555556" fps="60"/>
+</character>
