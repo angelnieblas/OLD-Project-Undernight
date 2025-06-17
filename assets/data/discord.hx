@@ -1,7 +1,7 @@
 import funkin.backend.utils.DiscordUtil;
 
 function onGameOver() {
-    DiscordUtil.changePresence('Nope.', null);
+    DiscordUtil.changePresence('Uhh', null);
 }
 
 function onDiscordPresenceUpdate(e) {
@@ -24,27 +24,27 @@ function onPlayStateUpdate() {
 
 function onMenuLoaded(name:String) {
     // Name is either "Main Menu", "Freeplay", "Title Screen", "Options Menu", "Credits Menu", "Beta Warning", "Update Available Screen", "Update Screen"
-    DiscordUtil.changePresenceSince("Nope.", null);
+    DiscordUtil.changePresenceSince("Uhh...", null);
 }
 
 function onEditorTreeLoaded(name:String) {
     switch(name) {
         case "Character Editor":
-            DiscordUtil.changePresenceSince("Nope.", null);
+            DiscordUtil.changePresenceSince("Uhh...", null);
         case "Chart Editor":
-            DiscordUtil.changePresenceSince("Nope.", null);
+            DiscordUtil.changePresenceSince("Uhh...", null);
         case "Stage Editor":
-            DiscordUtil.changePresenceSince("Nope.", null);
+            DiscordUtil.changePresenceSince("Uhh...", null);
     }
 }
 
 function onEditorLoaded(name:String, editingThing:String) {
     switch(name) {
         case "Character Editor":
-            DiscordUtil.changePresenceSince("Nope.", null);
+            DiscordUtil.changePresenceSince("Uhh...", null);
         case "Chart Editor":
-            DiscordUtil.changePresenceSince("Nope.", null);
+            DiscordUtil.changePresenceSince("Uhh...", null);
         case "Stage Editor":
-            DiscordUtil.changePresenceSince("Nope.", null);
+            DiscordUtil.changePresenceSince("Uhh...", null);
     }
 }

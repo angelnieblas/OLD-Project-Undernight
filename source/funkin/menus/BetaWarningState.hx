@@ -1,57 +1,145 @@
 package funkin.menus;
 
+import flixel.FlxG;
 import flixel.util.FlxColor;
 import flixel.text.FlxText;
 import funkin.backend.FunkinText;
+import funkin.backend.utils.DiscordUtil;
+import funkin.backend.system.DevState;
 
 class BetaWarningState extends MusicBeatState {
-	var titleAlphabet:Alphabet;
-	var disclaimer:FunkinText;
+    var titleText:FlxText;
+    var disclaimer:FunkinText;
+    var devPrompt:FlxText;
+    var devInputBox:FlxText;
+    var devModePromptActive:Bool = false;
+    var devInputBuffer:String = "";
+    var transitioning:Bool = false;
+    final secretCode:String = "makku";
+    final maxBuffer:Int = 32;
 
-	var transitioning:Bool = false;
+    override public function create() {
+        super.create();
 
-	public override function create() {
-		super.create();
+        titleText = new FlxText(0, 60, FlxG.width, "WARNING", 64);
+        titleText.setFormat("assets/fonts/vcr.ttf", 64, FlxColor.WHITE, "center");
+        add(titleText);
 
-		titleAlphabet = new Alphabet(0, 0, "WARNING", true);
-		titleAlphabet.screenCenter(X);
-		add(titleAlphabet);
+        disclaimer = new FunkinText(16, titleText.y + titleText.height + 10, FlxG.width - 32, "", 32);
+        disclaimer.alignment = CENTER;
+        disclaimer.applyMarkup(
+            'This engine is still in a *${Main.releaseCycle}* state. That means *majority of the features* are either *buggy* or *non finished*. If you find any bugs, please report them to the Codename Engine GitHub.\n\nPresiona ENTER para continuar.',
+            [
+                new FlxTextFormatMarkerPair(new flixel.text.FlxTextFormat(0xFFFF4444), "*")
+            ]
+        );
+        add(disclaimer);
 
-		disclaimer = new FunkinText(16, titleAlphabet.y + titleAlphabet.height + 10, FlxG.width - 32, "", 32);
-		disclaimer.alignment = CENTER;
-		disclaimer.applyMarkup('This engine is still in a *${Main.releaseCycle}* state. That means *majority of the features* are either *buggy* or *non finished*. If you find any bugs, please report them to the Codename Engine GitHub.\n\nPress ENTER to continue',
-			[
-				new FlxTextFormatMarkerPair(new FlxTextFormat(0xFFFF4444), "*")
-			]
-		);
-		add(disclaimer);
+        var off = Std.int((FlxG.height - (disclaimer.y + disclaimer.height)) / 2);
+        disclaimer.y += off;
+        titleText.y += off;
 
-		var off = Std.int((FlxG.height - (disclaimer.y + disclaimer.height)) / 2);
-		disclaimer.y += off;
-		titleAlphabet.y += off;
+        // Prompt y caja de texto simulada (inicialmente ocultos)
+        devPrompt = new FlxText(0, disclaimer.y + disclaimer.height + 40, FlxG.width, "Introduce el código de desarrollador:", 28);
+        devPrompt.setFormat("assets/fonts/vcr.ttf", 28, FlxColor.YELLOW, "center");
+        devPrompt.visible = false;
+        add(devPrompt);
 
-		DiscordUtil.call("onMenuLoaded", ["Beta Warning"]);
-	}
+        devInputBox = new FlxText(0, devPrompt.y + 40, FlxG.width, "", 28);
+        devInputBox.setFormat("assets/fonts/vcr.ttf", 28, FlxColor.LIME, "center");
+        devInputBox.borderStyle = OUTLINE;
+        devInputBox.borderColor = FlxColor.GRAY;
+        devInputBox.visible = false;
+        add(devInputBox);
 
-	public override function update(elapsed:Float) {
-		super.update(elapsed);
+        DiscordUtil.call("onMenuLoaded", ["Beta Warning"]);
+    }
 
-		if (controls.ACCEPT && transitioning) {
-			FlxG.camera.stopFX(); FlxG.camera.visible = false;
-			goToTitle();
-		}
+    override public function update(elapsed:Float) {
+        super.update(elapsed);
 
-		if (controls.ACCEPT && !transitioning) {
-			transitioning = true;
-			CoolUtil.playMenuSFX(CONFIRM);
-			FlxG.camera.flash(FlxColor.WHITE, 1, function() {
-				FlxG.camera.fade(FlxColor.BLACK, 2.5, false, goToTitle);
-			});
-		}
-	}
+        // Mostrar prompt/caja al presionar TAB
+        if (FlxG.keys.justPressed.TAB && !devModePromptActive && !transitioning) {
+            devModePromptActive = true;
+            devPrompt.visible = true;
+            devInputBox.visible = true;
+            devInputBuffer = "";
+            devInputBox.text = "";
+        }
 
-	private function goToTitle() {
-		MusicBeatState.skipTransIn = MusicBeatState.skipTransOut = true;
-		FlxG.switchState(new TitleState());
-	}
+        // Si está activo el prompt de clave
+        if (devModePromptActive && !transitioning) {
+            // Letras
+            for (i in 0...26) {
+                var upper = String.fromCharCode("A".code + i);
+                var lower = String.fromCharCode("a".code + i);
+                if (Reflect.field(FlxG.keys.justPressed, upper)) {
+                    if (devInputBuffer.length < maxBuffer) devInputBuffer += lower;
+                }
+                if (Reflect.field(FlxG.keys.justPressed, lower)) {
+                    if (devInputBuffer.length < maxBuffer) devInputBuffer += lower;
+                }
+            }
+            // Números
+            for (i in 0...10) {
+                var num = Std.string(i);
+                if (Reflect.field(FlxG.keys.justPressed, num)) {
+                    if (devInputBuffer.length < maxBuffer) devInputBuffer += num;
+                }
+            }
+            // Espacio
+            if (FlxG.keys.justPressed.SPACE && devInputBuffer.length < maxBuffer) {
+                devInputBuffer += " ";
+            }
+            // Borrar
+            if (FlxG.keys.justPressed.BACKSPACE && devInputBuffer.length > 0) {
+                devInputBuffer = devInputBuffer.substr(0, devInputBuffer.length - 1);
+            }
+            devInputBox.text = devInputBuffer;
+
+            // Confirmar clave
+            if (FlxG.keys.justPressed.ENTER) {
+                if (devInputBuffer.toLowerCase() == secretCode) {
+                    DevState.enabled = true;
+                    devInputBuffer = "";
+                    transitioning = true;
+                    CoolUtil.playMenuSFX(CONFIRM);
+                    FlxG.camera.flash(FlxColor.WHITE, 1, function() {
+                        FlxG.camera.fade(FlxColor.BLACK, 2.5, false, goToDev);
+                    });
+                } else {
+                    devInputBuffer = "";
+                    devInputBox.text = "";
+                    devPrompt.text = "Código incorrecto. Intenta de nuevo:";
+                }
+            }
+            // Cancelar
+            if (FlxG.keys.justPressed.ESCAPE) {
+                devModePromptActive = false;
+                devPrompt.visible = false;
+                devInputBox.visible = false;
+                devPrompt.text = "Introduce el código de desarrollador:";
+            }
+            return;
+        }
+
+        // Si no está activo el prompt, ENTER avanza normalmente
+        if (FlxG.keys.justPressed.ENTER && !transitioning) {
+            transitioning = true;
+            CoolUtil.playMenuSFX(CONFIRM);
+            FlxG.camera.flash(FlxColor.WHITE, 1, function() {
+                FlxG.camera.fade(FlxColor.BLACK, 2.5, false, goToTitle);
+            });
+        }
+    }
+
+    private function goToTitle() {
+        MusicBeatState.skipTransIn = MusicBeatState.skipTransOut = true;
+        FlxG.switchState(new TitleState());
+    }
+
+    private function goToDev() {
+        MusicBeatState.skipTransIn = MusicBeatState.skipTransOut = true;
+        FlxG.switchState(new DevState());
+    }
 }
