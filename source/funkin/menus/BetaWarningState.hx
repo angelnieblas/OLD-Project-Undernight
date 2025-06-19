@@ -7,15 +7,16 @@ import funkin.backend.FunkinText;
 import funkin.backend.utils.DiscordUtil;
 import funkin.backend.system.DevState;
 
+// Alternativa a FlxInputText: caja de texto simulada con FlxText
 class BetaWarningState extends MusicBeatState {
     var titleText:FlxText;
     var disclaimer:FunkinText;
     var devPrompt:FlxText;
     var devInputBox:FlxText;
-    var devModePromptActive:Bool = false;
     var devInputBuffer:String = "";
+    var devModePromptActive:Bool = false;
     var transitioning:Bool = false;
-    final secretCode:String = "makku";
+    final secretCode:String = "Makku"; // Exacto, con mayúscula
     final maxBuffer:Int = 32;
 
     override public function create() {
@@ -69,37 +70,33 @@ class BetaWarningState extends MusicBeatState {
 
         // Si está activo el prompt de clave
         if (devModePromptActive && !transitioning) {
-            // Letras
+            // Letras y mayúsculas exactas
             for (i in 0...26) {
                 var upper = String.fromCharCode("A".code + i);
                 var lower = String.fromCharCode("a".code + i);
-                if (Reflect.field(FlxG.keys.justPressed, upper)) {
-                    if (devInputBuffer.length < maxBuffer) devInputBuffer += lower;
-                }
-                if (Reflect.field(FlxG.keys.justPressed, lower)) {
-                    if (devInputBuffer.length < maxBuffer) devInputBuffer += lower;
-                }
+                if (Reflect.field(FlxG.keys.justPressed, upper) && devInputBuffer.length < maxBuffer)
+                    devInputBuffer += upper;
+                if (Reflect.field(FlxG.keys.justPressed, lower) && devInputBuffer.length < maxBuffer)
+                    devInputBuffer += lower;
             }
             // Números
             for (i in 0...10) {
                 var num = Std.string(i);
-                if (Reflect.field(FlxG.keys.justPressed, num)) {
-                    if (devInputBuffer.length < maxBuffer) devInputBuffer += num;
-                }
+                if (Reflect.field(FlxG.keys.justPressed, num) && devInputBuffer.length < maxBuffer)
+                    devInputBuffer += num;
             }
             // Espacio
-            if (FlxG.keys.justPressed.SPACE && devInputBuffer.length < maxBuffer) {
+            if (FlxG.keys.justPressed.SPACE && devInputBuffer.length < maxBuffer)
                 devInputBuffer += " ";
-            }
             // Borrar
-            if (FlxG.keys.justPressed.BACKSPACE && devInputBuffer.length > 0) {
+            if (FlxG.keys.justPressed.BACKSPACE && devInputBuffer.length > 0)
                 devInputBuffer = devInputBuffer.substr(0, devInputBuffer.length - 1);
-            }
-            devInputBox.text = devInputBuffer;
 
-            // Confirmar clave
+            devInputBox.text = devInputBuffer + ((FlxG.game.ticks % 60 < 30) ? "|" : ""); // Simula cursor
+
+            // Confirmar clave (debe ser exacta)
             if (FlxG.keys.justPressed.ENTER) {
-                if (devInputBuffer.toLowerCase() == secretCode) {
+                if (devInputBuffer == secretCode) {
                     DevState.enabled = true;
                     devInputBuffer = "";
                     transitioning = true;
